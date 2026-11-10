@@ -166,3 +166,6 @@ END;
 $$;
 REVOKE ALL ON public.oms_alert_candidates FROM PUBLIC, anon, authenticated;
 GRANT SELECT ON public.oms_alert_candidates TO service_role;
+
+-- Make PostgREST pick up the new functions immediately.
+NOTIFY pgrst, 'reload schema';

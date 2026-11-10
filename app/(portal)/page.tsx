@@ -2,7 +2,7 @@ import Link from "next/link";
 import { requirePermission } from "@/lib/auth";
 import { can } from "@shared/rbac";
 import { usd } from "@/lib/format";
-import { getKpis } from "@/lib/ops";
+import { getKpis, type Kpis } from "@/lib/ops";
 import { getServiceClient } from "@/lib/supabase";
 
 const RANGES = [7, 30, 90];
@@ -12,7 +12,21 @@ export default async function Dashboard({ searchParams }: { searchParams: Promis
   const admin = await requirePermission("dashboard.view");
   const sp = await searchParams;
   const days = RANGES.includes(Number(sp.days)) ? Number(sp.days) : 30;
-  const kpis = await getKpis(days);
+  let kpis: Kpis;
+  try {
+    kpis = await getKpis(days);
+  } catch (e) {
+    console.error("dashboard kpis failed", e);
+    return (
+      <>
+        <h1>Operations dashboard</h1>
+        <p role="alert">
+          The dashboard database functions are missing. Apply
+          supabase/migrations/20261110000200_oms_dashboard.sql in the Supabase SQL editor, then reload.
+        </p>
+      </>
+    );
+  }
   const money = can(admin.role, "finance.view");
 
   const { data: alerts } = await getServiceClient()
