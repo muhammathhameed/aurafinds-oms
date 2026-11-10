@@ -133,7 +133,7 @@ AS $$
            round(p.cost_price * 100)::bigint AS cost_cents
       FROM public.order_items oi
       JOIN paid ON paid.id = oi.order_id
-      LEFT JOIN public.products p ON p.id::text = oi.product_id
+      LEFT JOIN public.products p ON p.id::text = oi.product_id::text
   )
   SELECT jsonb_build_object(
     'days', GREATEST(p_days, 1),
