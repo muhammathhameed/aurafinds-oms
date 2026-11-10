@@ -15,3 +15,7 @@ active row in `admin_users` does.
 
 RBAC lives in `shared/rbac.ts` (tests in `tests/`, run `npm test`).
 Every privileged action must call `requirePermission(...)` and `audit(...)`.
+
+## Phase 2: dashboard and alerts
+Apply `supabase/migrations/20261110000200_oms_dashboard.sql`, set `CRON_SECRET` in Vercel (a cron runs the detector every 15 minutes; Hobby plans only allow daily crons), and use **Alerts → Run checks now** for an immediate scan.
+It reads the storefront's CJ fulfillment fields (`orders.fulfillment_status`). Do not apply the dropship engine's `20261108000100_dropship_core.sql`: it defines a conflicting `fulfillment_status`.
