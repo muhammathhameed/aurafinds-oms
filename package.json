@@ -6,7 +6,7 @@
     "build": "next build",
     "start": "next start -p 3001",
     "typecheck": "tsc --noEmit",
-    "test": "tsc --ignoreConfig --target es2022 --module commonjs --strict --skipLibCheck --outDir .test-build shared/rbac.ts tests/rbac.test.ts && node --test .test-build/tests/"
+    "test": "tsc --ignoreConfig --target es2022 --module commonjs --strict --skipLibCheck --outDir .test-build shared/rbac.ts tests/rbac.test.ts && node --test .test-build/tests/rbac.test.js"
   },
   "engines": {
     "node": ">=22"
