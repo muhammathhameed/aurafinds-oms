@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { runDetection } from "@/lib/ops";
 
 export const dynamic = "force-dynamic";
+export const maxDuration = 60; // image checks can take a while
 
 // Called on a schedule (Vercel Cron sends `Authorization: Bearer $CRON_SECRET`).
 export async function GET(request: Request) {

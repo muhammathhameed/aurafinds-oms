@@ -31,3 +31,6 @@ Apply `supabase/migrations/20261110000500_oms_returns_refunds.sql`. Refunds need
 
 ## Phase 6: risk detection and assistant
 Apply `supabase/migrations/20261110000600_oms_risk_rules.sql`. The detector now also covers duplicate orders, duplicate SKUs, invalid or undescribed products, low stock, broken image URLs (checked by the OMS server, 25 per run), repeat returns, repeat complaints, VIP customers with an order in trouble, and CJ return-rate / slow-shipping / failing-submission signals. All are plain SQL rules. The **Assistant** is read-only: each question maps to one fixed query (keyword match, or `GEMINI_API_KEY` as an optional fallback that only picks the query name). There are no AI-initiated actions. Dismissing an alert does not tune a rule; adjust the thresholds in the migration.
+
+## Hardening pass
+`supabase/migrations/20261110000700_oms_detector_fix.sql` fixes a scan failure when one order duplicates several earlier ones. The middleware now lets `/api/cron/*` through (it previously redirected Vercel Cron to /login). Added the Audit log and Customers pages that the navigation linked to.

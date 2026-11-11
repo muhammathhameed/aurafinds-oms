@@ -5,6 +5,8 @@ import { requirePermission } from "@/lib/auth";
 import { runDetection } from "@/lib/ops";
 import { getServiceClient } from "@/lib/supabase";
 
+export const maxDuration = 60; // "Run checks now" includes image probes
+
 async function setStatus(formData: FormData) {
   "use server";
   const actor = await requirePermission("alerts.manage");

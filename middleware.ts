@@ -4,7 +4,8 @@ import { NextResponse, type NextRequest } from "next/server";
 // Keeps the Supabase session fresh and gates everything except /login.
 // Role checks happen server-side in requirePermission; this is only the first wall.
 export async function middleware(request: NextRequest) {
-  if (request.nextUrl.pathname === "/api/health") return NextResponse.next();
+  // Health and cron endpoints carry their own authentication (CRON_SECRET), not a login session.
+  if (request.nextUrl.pathname === "/api/health" || request.nextUrl.pathname.startsWith("/api/cron/")) return NextResponse.next();
   if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
     return new NextResponse("OMS is not configured: set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY, then redeploy.", { status: 503 });
   }
