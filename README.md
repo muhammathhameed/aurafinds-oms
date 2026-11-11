@@ -34,3 +34,6 @@ Apply `supabase/migrations/20261110000600_oms_risk_rules.sql`. The detector now 
 
 ## Hardening pass
 `supabase/migrations/20261110000700_oms_detector_fix.sql` fixes a scan failure when one order duplicates several earlier ones. The middleware now lets `/api/cron/*` through (it previously redirected Vercel Cron to /login). Added the Audit log and Customers pages that the navigation linked to.
+
+## Migration order
+Apply in filename order. **`20261110000050_storefront_prereqs.sql` must come first** (before `0200`): it adds any storefront columns the OMS reads that your database is missing. The whole chain was verified on a minimal schema.
