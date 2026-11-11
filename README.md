@@ -19,3 +19,6 @@ Every privileged action must call `requirePermission(...)` and `audit(...)`.
 ## Phase 2: dashboard and alerts
 Apply `supabase/migrations/20261110000200_oms_dashboard.sql`, set `CRON_SECRET` in Vercel (a daily cron runs the detector; for more frequent runs, have n8n call `GET /api/cron/detect` with `Authorization: Bearer $CRON_SECRET`), and use **Alerts → Run checks now** for an immediate scan.
 It reads the storefront's CJ fulfillment fields (`orders.fulfillment_status`). Do not apply the dropship engine's `20261108000100_dropship_core.sql`: it defines a conflicting `fulfillment_status`.
+
+## Phase 3: orders
+Apply `supabase/migrations/20261110000300_oms_orders.sql`. Set `STOREFRONT_URL` and `CJ_FULFILLMENT_SECRET` (same value as the storefront's) to enable **Retry supplier submission**; the OMS calls the storefront's `/api/fulfillment`, which refuses orders already sent to CJ. Refunds and returns come in Phase 5 (they need Stripe).
