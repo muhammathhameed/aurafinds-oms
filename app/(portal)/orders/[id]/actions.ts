@@ -8,7 +8,7 @@ import { isUuid } from "@/lib/orders";
 import { createStripeRefund } from "@/lib/stripe";
 import { getServiceClient } from "@/lib/supabase";
 
-const back = (id: string, msg: string) => redirect(`/orders/${id}?msg=${encodeURIComponent(msg)}`);
+const back: (id: string, msg: string) => never = (id, msg) => redirect(`/orders/${id}?msg=${encodeURIComponent(msg)}`);
 const dollarsToCents = (v: string): number | null =>
   /^\d{1,7}(\.\d{1,2})?$/.test(v.trim()) ? Math.round(Number(v) * 100) : null;
 
