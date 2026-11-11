@@ -22,3 +22,6 @@ It reads the storefront's CJ fulfillment fields (`orders.fulfillment_status`). D
 
 ## Phase 3: orders
 Apply `supabase/migrations/20261110000300_oms_orders.sql`. Set `STOREFRONT_URL` and `CJ_FULFILLMENT_SECRET` (same value as the storefront's) to enable **Retry supplier submission**; the OMS calls the storefront's `/api/fulfillment`, which refuses orders already sent to CJ. Refunds and returns come in Phase 5 (they need Stripe).
+
+## Phase 4: suppliers
+Apply `supabase/migrations/20261110000400_oms_suppliers.sql`. **Suppliers** lists the registry and CJ performance; **Product → CJ variant mapping** edits the storefront's `product_cj_variants` table, and the alert detector now flags active products with no mapping. The storefront fulfils only through CJ, so there is no separate PO creation or supplier recommendation yet (both need a second supplier wired into the storefront).
