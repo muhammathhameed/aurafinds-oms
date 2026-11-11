@@ -25,3 +25,6 @@ Apply `supabase/migrations/20261110000300_oms_orders.sql`. Set `STOREFRONT_URL` 
 
 ## Phase 4: suppliers
 Apply `supabase/migrations/20261110000400_oms_suppliers.sql`. **Suppliers** lists the registry and CJ performance; **Product → CJ variant mapping** edits the storefront's `product_cj_variants` table, and the alert detector now flags active products with no mapping. The storefront fulfils only through CJ, so there is no separate PO creation or supplier recommendation yet (both need a second supplier wired into the storefront).
+
+## Phase 5: returns, refunds, shipments
+Apply `supabase/migrations/20261110000500_oms_returns_refunds.sql`. Refunds need `STRIPE_SECRET_KEY` on the OMS: create a **restricted** key in Stripe with only *Refunds: Write* and *Checkout Sessions: Read*. Safeguards: the amount is reserved under a row lock before Stripe is called (no over-refunding, even with two admins at once), each refund row is Stripe's idempotency key (a retry can never refund twice), and an unknown outcome stays *pending* until you retry it. Who may refund is `orders.refund` in `shared/rbac.ts` (finance, ops admin, super admin). Refunds do not restock or cancel the CJ order; handle that with CJ separately.

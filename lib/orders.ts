@@ -74,15 +74,23 @@ export async function getOrder(id: string) {
     };
   });
 
-  const { data: notes } = await db.from("order_notes").select("id, author_email, body, created_at").eq("order_id", id).order("created_at", { ascending: false });
+  const { data: notes } = await db.from("order_notes").select("id, author_email, body, kind, created_at").eq("order_id", id).order("created_at", { ascending: false });
   const { data: audits } = await db.from("audit_log").select("at, actor_email, action, after").eq("entity_type", "order").eq("entity_id", id).order("at", { ascending: false }).limit(50);
 
   const timeline: TimelineEntry[] = [{ at: o.created_at, label: `Order placed (${o.payment_status})` }];
   if (o.fulfillment_submitted_at) timeline.push({ at: o.fulfillment_submitted_at, label: "Submitted to supplier", detail: o.cj_order_id ?? undefined });
   if (o.shipped_at) timeline.push({ at: o.shipped_at, label: "Shipped", detail: [o.tracking_carrier, o.tracking_number].filter(Boolean).join(" ") || undefined });
   for (const a of audits ?? []) timeline.push({ at: a.at, label: `${a.action} by ${a.actor_email ?? "unknown"}`, detail: a.after ? JSON.stringify(a.after) : undefined });
-  for (const n of notes ?? []) timeline.push({ at: n.created_at, label: `Note by ${n.author_email ?? "unknown"}`, detail: n.body });
+  for (const n of notes ?? []) timeline.push({ at: n.created_at, label: `${n.kind === "customer_contact" ? "Customer contact" : "Note"} by ${n.author_email ?? "unknown"}`, detail: n.body });
   timeline.sort((a, b) => +new Date(b.at) - +new Date(a.at));
 
-  return { order: o, lines, notes: notes ?? [], timeline };
+  const { data: returns } = await db.from("order_returns").select("id, status, reason, requested_amount_cents, created_at").eq("order_id", id).order("created_at", { ascending: false });
+  const { data: refunds } = await db.from("order_refunds").select("id, amount_cents, status, error, created_by_email, created_at").eq("order_id", id).order("created_at", { ascending: false });
+  for (const r of refunds ?? []) timeline.push({ at: r.created_at, label: `Refund ${r.status} by ${r.created_by_email ?? "unknown"}`, detail: `$${(Number(r.amount_cents) / 100).toFixed(2)}${r.error ? ` — ${r.error}` : ""}` });
+  for (const r of returns ?? []) timeline.push({ at: r.created_at, label: `Return ${r.status}`, detail: r.reason });
+  timeline.sort((a, b) => +new Date(b.at) - +new Date(a.at));
+  const refundedCents = (refunds ?? []).filter((r) => r.status === "succeeded").reduce((n, r) => n + Number(r.amount_cents), 0);
+  const heldCents = (refunds ?? []).filter((r) => r.status === "pending").reduce((n, r) => n + Number(r.amount_cents), 0);
+
+  return { order: o, lines, notes: notes ?? [], timeline, returns: returns ?? [], refunds: refunds ?? [], refundedCents, heldCents };
 }

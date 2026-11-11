@@ -8,6 +8,7 @@ import { redirect } from "next/navigation";
 const NAV: { href: string; label: string; perm: Permission }[] = [
   { href: "/", label: "Dashboard", perm: "dashboard.view" },
   { href: "/orders", label: "Orders", perm: "orders.view" },
+  { href: "/shipments", label: "Shipments", perm: "orders.view" },
   { href: "/suppliers", label: "Suppliers", perm: "suppliers.view" },
   { href: "/alerts", label: "Alerts", perm: "alerts.view" },
   { href: "/customers", label: "Customers", perm: "customers.view" },

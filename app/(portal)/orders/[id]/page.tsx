@@ -7,6 +7,7 @@ import { requirePermission } from "@/lib/auth";
 import { usd } from "@/lib/format";
 import { getOrder, isUuid } from "@/lib/orders";
 import { getServiceClient } from "@/lib/supabase";
+import { createReturn, issueRefund, logContact, retryPendingRefund, setReturnStatus } from "./actions";
 
 async function addNote(formData: FormData) {
   "use server";
@@ -59,7 +60,8 @@ export default async function OrderDetail({ params, searchParams }: { params: Pr
   const { msg } = await searchParams;
   const data = await getOrder(id);
   if (!data) notFound();
-  const { order: o, lines, notes, timeline } = data;
+  const { order: o, lines, notes, timeline, returns, refunds, refundedCents, heldCents } = data;
+  const remaining = Math.max(0, Number(o.total_amount) - refundedCents - heldCents);
   const money = can(admin.role, "finance.view");
   const ship = (o.shipping_details && typeof o.shipping_details === "object" ? o.shipping_details : null) as Record<string, unknown> | null;
   const canRetry = can(admin.role, "fulfillment.manage") && o.payment_status === "paid" && ["failed", "pending"].includes(o.fulfillment_status);
@@ -104,6 +106,49 @@ export default async function OrderDetail({ params, searchParams }: { params: Pr
         </>
       )}
 
+      <h2>Returns &amp; refunds</h2>
+      <p>Refunded {usd(refundedCents)}{heldCents > 0 ? ` · ${usd(heldCents)} pending` : ""} · remaining refundable {usd(remaining)}</p>
+      {returns.map((r) => (
+        <div key={r.id} style={{ background: "#fff", padding: 10, marginBottom: 8 }}>
+          <strong>Return #{r.id} — {r.status}</strong>{r.requested_amount_cents != null ? ` · requested ${usd(Number(r.requested_amount_cents))}` : ""}<br />
+          <small>{r.reason}</small>
+          {can(admin.role, "returns.manage") && ({ requested: ["approved", "rejected"], approved: ["received", "closed"], received: ["closed"] } as Record<string, string[]>)[r.status]?.map((st) => (
+            <form key={st} action={setReturnStatus} style={{ display: "inline", marginLeft: 8 }}>
+              <input type="hidden" name="order_id" value={o.id} /><input type="hidden" name="return_id" value={r.id} />
+              <button name="status" value={st}>{st}</button>
+            </form>
+          ))}
+          {can(admin.role, "orders.refund") && ["approved", "received"].includes(r.status) && remaining > 0 && (
+            <form action={issueRefund} style={{ marginTop: 6, display: "flex", gap: 6 }}>
+              <input type="hidden" name="order_id" value={o.id} /><input type="hidden" name="return_id" value={r.id} />
+              <input name="amount" defaultValue={(Math.min(remaining, Number(r.requested_amount_cents ?? remaining)) / 100).toFixed(2)} size={8} />
+              <button type="submit">Refund via Stripe</button>
+            </form>
+          )}
+        </div>
+      ))}
+      {can(admin.role, "orders.refund") && o.payment_status === "paid" && remaining > 0 && (
+        <form action={issueRefund} style={{ display: "flex", gap: 6, marginBottom: 8 }}>
+          <input type="hidden" name="order_id" value={o.id} />
+          <input name="amount" placeholder="Amount ($)" size={8} required />
+          <button type="submit">Refund without a return</button>
+        </form>
+      )}
+      {refunds.filter((r) => r.status === "pending").map((r) => can(admin.role, "orders.refund") && (
+        <form key={r.id} action={retryPendingRefund}>
+          <input type="hidden" name="order_id" value={o.id} /><input type="hidden" name="refund_id" value={r.id} />
+          <button type="submit">Retry pending refund ({usd(Number(r.amount_cents))})</button>
+        </form>
+      ))}
+      {can(admin.role, "returns.manage") && (
+        <form action={createReturn} style={{ display: "grid", gap: 6, maxWidth: 480, marginTop: 8 }}>
+          <input type="hidden" name="order_id" value={o.id} />
+          <textarea name="reason" rows={2} placeholder="Return reason" maxLength={1000} required />
+          <input name="amount" placeholder="Requested refund ($, optional)" />
+          <button type="submit">Log return request</button>
+        </form>
+      )}
+
       <h2>Timeline</h2>
       <ul>
         {timeline.map((t, i) => (
@@ -118,6 +163,16 @@ export default async function OrderDetail({ params, searchParams }: { params: Pr
             <input type="hidden" name="order_id" value={o.id} />
             <textarea name="body" rows={3} maxLength={2000} required />
             <button type="submit">Add note</button>
+          </form>
+        </>
+      )}
+      {can(admin.role, "customers.notes") && (
+        <>
+          <h2>Log customer contact</h2>
+          <form action={logContact} style={{ display: "grid", gap: 8, maxWidth: 480 }}>
+            <input type="hidden" name="order_id" value={o.id} />
+            <textarea name="body" rows={2} placeholder="e.g. Emailed customer the tracking link" maxLength={2000} required />
+            <button type="submit">Log contact</button>
           </form>
         </>
       )}
