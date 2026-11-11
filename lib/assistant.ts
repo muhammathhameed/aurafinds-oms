@@ -69,7 +69,7 @@ const when = (t: unknown) => (t ? new Date(String(t)).toLocaleString() : "");
 
 async function alertsLike(patterns: string[], title: string): Promise<Answer> {
   const db = getServiceClient();
-  const filter = patterns.map((p) => `kind.like.${p}`).join(",");
+  const filter = patterns.map((p) => `kind.like.${p.replace(/%/g, "*")}`).join(","); // PostgREST wildcards are *
   const { data, error } = await db.from("ops_alerts").select("severity, title, entity_type, entity_id, last_seen")
     .in("status", ["open", "acknowledged"]).or(filter).order("last_seen", { ascending: false }).limit(50);
   if (error) throw new Error(error.message);
