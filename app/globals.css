@@ -59,3 +59,18 @@ body {
 }
 
 .badge-critical { background: #fee2e2; color: var(--critical); }
+
+.nav-item {
+  padding: 10px 12px;
+  border-radius: 8px;
+  color: #94a3b8;
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+
+.nav-item:hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: #ffffff;
+}

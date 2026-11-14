@@ -38,17 +38,7 @@ export default async function PortalLayout({ children }: { children: ReactNode }
             <Link 
               key={n.href} 
               href={n.href} 
-              style={{ 
-                padding: "10px 12px", 
-                borderRadius: 8, 
-                color: "#94a3b8", 
-                textDecoration: "none", 
-                fontSize: 14, 
-                fontWeight: 500, 
-                transition: "all 0.2s" 
-              }}
-              onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(255,255,255,0.05)"; e.currentTarget.style.color = "#fff"; }}
-              onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "#94a3b8"; }}
+              className="nav-item"
             >
               {n.label}
             </Link>
