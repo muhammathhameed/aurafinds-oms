@@ -6,7 +6,7 @@
     "build": "next build",
     "start": "next start -p 3001",
     "typecheck": "tsc --noEmit",
-    "test": "tsc --ignoreConfig --target es2022 --module commonjs --strict --skipLibCheck --outDir .test-build shared/rbac.ts tests/rbac.test.ts && node --test .test-build/tests/rbac.test.js"
+    "test": "tsc --esModuleInterop --target es2022 --module commonjs --strict --skipLibCheck --outDir .test-build shared/rbac.ts tests/rbac.test.ts && node --test .test-build/tests/rbac.test.js"
   },
   "engines": {
     "node": ">=22"
@@ -15,11 +15,12 @@
     "@supabase/ssr": "^0.5.2",
     "@supabase/supabase-js": "^2.48.1",
     "next": "^15.5.2",
-    "server-only": "^0.0.1",
     "react": "^19.0.0",
-    "react-dom": "^19.0.0"
+    "react-dom": "^19.0.0",
+    "server-only": "^0.0.1"
   },
   "devDependencies": {
+    "@playwright/test": "^1.65.1",
     "@types/node": "^20.17.6",
     "@types/react": "^19.0.0",
     "typescript": "^5.8.2"
